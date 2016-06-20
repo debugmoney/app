@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+	default-lazy-init="true">
+
+	<bean id="permissionQueryService" class="com.yeepay.g3.utils.query.impl.QueryServiceImpl">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="querys">
+			<map>
+				<entry key="functionQueryList">
+					<ref bean="functionQueryList" />
+				</entry>
+				<entry key="menuQueryList">
+					<ref bean="menuQueryList" />
+				</entry>
+				<entry key="applicationQuery">
+					<ref bean="applicationQuery" />
+				</entry>
+				<entry key="roleQuery">
+					<ref bean="roleQuery1" />
+				</entry>
+				<entry key="roleQuery2">
+					<ref bean="roleQuery2" />
+				</entry>
+				<entry key="operatorQuery">
+					<ref bean="operatorQuery" />
+				</entry>
+				<entry key="groupQueryList">
+					<ref bean="groupQueryList" />
+				</entry>
+				<entry key="customerQuery">
+					<ref bean="customerQuery" />
+				</entry>
+				<entry key="reviewQuery">
+					<ref bean="reviewQuery" />
+				</entry>
+				<entry key="operatorLogQuery">
+					<ref bean="operatorLogQuery" />
+				</entry>
+				<entry key="rateLimiterRuleQuery">
+					<ref bean="rateLimiterRuleQuery" />
+				</entry>
+			</map>
+		</property>
+	</bean>
+	<bean id="functionQueryList" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					select ID,APP_ID,FUNCTION_NO,FUNCTION_NAME,FUNCTION_URL,GROUP_ID,FUNCTION_TYPE,STATUS,DESCRIPTION,RISK_LEVEL,DEFAULT_TAG,LOG_TAG,DISPLAY_TAG,CREATE_TIME,LAST_UPDATE_TIME from PERMISSION.TBL_FUNCTION
+					 where 1=1
+						/~appId: and APP_ID = {appId,String}~/
+						/~functionName: and FUNCTION_NAME like '%'||{functionName}||'%'~/
+						/~functionNo: and FUNCTION_NO = {functionNo,String}~/
+						/~functionUrl: and FUNCTION_URL like '%'||{functionUrl,String}||'%'~/
+						/~functionType: and FUNCTION_TYPE={functionType,String}~/
+						/~Level: and RISK_LEVEL={Level,String}~/
+						/~status: and STATUS = {status,String}~/
+						/~createStartTime: AND CREATE_TIME >= {createStartTime}~/
+						/~createEndTime: AND CREATE_TIME <= {createEndTime}~/
+						ORDER BY id
+					with ur
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="groupQueryList" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					select * from PERMISSION.TBL_GROUP
+					 where 1=1
+						/~appId: and APP_ID = {appId,String}~/
+						/~groupName: and GROUP_NAME like '%'||{groupName}||'%'~/
+						/~groupType: AND GROUP_TYPE = {groupType}~/
+						/~parentId: AND PARENT_ID = {parentId}~/
+						/~createStartTime: AND CREATE_TIME >= {createStartTime}~/
+						/~createEndTime: AND CREATE_TIME <= {createEndTime}~/
+						ORDER BY id
+					with ur
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="menuQueryList" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					select * from PERMISSION.TBL_MENU
+					 where 1=1
+					 	/~menuId: and ID = {menuId,String}~/
+						/~appId: and APP_ID = {appId,String}~/
+						/~functionNo: and FUNCTION_id = {functionNo,String}~/
+						/~functionUrl: and FUNCTION_URL like '%'||{functionUrl,String}||'%'~/
+						/~menuName: and MENU_NAME like '%'||{menuName,String}||'%'~/
+						/~level: and LEVEL={level,String}~/
+						/~parentId: and PARENT_ID={parentId,String}~/
+						/~createStartTime: AND CREATE_TIME >= {createStartTime}~/
+						/~createEndTime: AND CREATE_TIME <= {createEndTime}~/
+						ORDER BY id
+					with ur
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="applicationQuery" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					SELECT
+										*
+									FROM
+										TBL_APPLICATION
+									WHERE 1=1
+										/~appName: AND APP_NAME like '%'||{appName}||'%'~/
+										/~appUrl: AND APP_URL like '%'||{appUrl}||'%'~/
+										/~status: AND STATUS = {status}~/
+										/~appType: AND APP_TYPE = {appType}~/
+										/~description: AND DESCRIPTION = {description}~/
+										/~createStartTime: AND CREATE_TIME >= {createStartTime}~/
+										/~createEndTime: AND CREATE_TIME <= {createEndTime}~/
+									ORDER BY id
+									WITH UR
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="roleQuery1" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					select  r.*,
+						case when (c.customer_number is null or c.customer_number='') then '应用默认角色'
+						else  c.customer_number end customer_number
+ 						from permission.tbl_role r 
+ 						left join permission.tbl_customer c 
+ 						on r.customer_id=c.id 
+						WHERE 1=1
+										/~appId: AND r.APP_ID = {appId,String}~/	
+										/~roleName: AND r.ROLE_NAME like '%'||{roleName}||'%'~/
+										/~description: AND r.DESCRPTION like '%'||{description}||'%'~/
+										/~status: AND r.STATUS = {status}~/
+										/~belongCustomerNo: and c.customer_number={belongCustomerNo}~/
+										/~createStartTime: AND r.CREATE_TIME >= {createStartTime}~/
+										/~createEndTime: AND r.CREATE_TIME <= {createEndTime}~/
+									ORDER BY id
+									WITH UR
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="roleQuery2" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					select  r.*,
+						case when (c.customer_number is null or c.customer_number='') then '应用默认角色'
+						else  c.customer_number end customer_number
+ 						from permission.tbl_role r 
+ 						left join permission.tbl_customer c 
+ 						on r.customer_id=c.id 
+						WHERE  (c.customer_number is null or c.customer_number='')
+										/~appId: AND r.APP_ID = {appId}~/	
+										/~roleName: AND r.ROLE_NAME like '%'||{roleName}||'%'~/
+										/~description: AND r.DESCRPTION like '%'||{description}||'%'~/
+										/~status: AND r.STATUS = {status}~/
+										/~createStartTime: AND r.CREATE_TIME >= {createStartTime}~/
+										/~createEndTime: AND r.CREATE_TIME <= {createEndTime}~/
+									ORDER BY id
+									WITH UR
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="operatorQuery" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					SELECT
+										o.*,c.customer_number
+									FROM
+										TBL_OPERATOR o
+										left join 
+										tbl_customer  c on  o.CUSTOMER_ID=c.id
+									WHERE 1=1
+										/~appId: AND o.APP_ID = {appId}~/
+										/~loginName: AND o.LOGIN_NAME like '%'||{loginName}||'%'~/
+										/~uniqueName: AND o.UNIQUE_NAME like '%'||{uniqueName}||'%'~/
+										/~customerNo: AND c.customer_number  like '%'||{customerNo}||'%'~/
+										/~operatorType: AND o.OPERATOR_TYPE = {operatorType}~/
+										/~status: AND o.STATUS = {status}~/
+										/~createStartTime: AND o.CREATE_TIME >= {createStartTime}~/
+										/~createEndTime: AND o.CREATE_TIME <= {createEndTime}~/
+									ORDER BY id
+									WITH UR
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="customerQuery" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					SELECT
+										*
+									FROM
+										TBL_CUSTOMER
+									WHERE 1=1
+										/~appId: AND APP_ID = {appId}~/
+										/~customerNo: AND CUSTOMER_NUMBER = {customerNo}~/
+										/~customerName: AND CUSTOMER_NAME like '%'||{customerName}||'%'~/
+										/~customerType: AND CUSTOMER_TYPE = {customerType}~/
+										/~status: AND STATUS = {status}~/
+										/~createStartTime: AND CREATE_TIME >= {createStartTime}~/
+										/~createEndTime: AND CREATE_TIME <= {createEndTime}~/
+									ORDER BY id
+									WITH UR
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="reviewQuery" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					SELECT
+										*
+									FROM
+										TBL_REVIEW
+									WHERE 1=1
+										/~appId: AND APP_ID = {appId}~/
+										/~reviewName: AND REVIEW_NAME like '%'||{reviewName}||'%'~/
+										/~status: AND STATUS = {status}~/
+										/~createStartTime: AND CREATE_TIME >= {createStartTime}~/
+										/~createEndTime: AND CREATE_TIME <= {createEndTime}~/
+									ORDER BY id
+									WITH UR
+				]]>
+			</value>
+		</property>
+	</bean>
+	<bean id="operatorLogQuery" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+					SELECT
+		ID,KEY_GUID,OPERATOR_NUMBER,FUNCTION_DESCRIPTION,FUNCTION_URL,IP,STATUS,
+		INVOKE_START_TIME,INVOKE_END_TIME,APP_NAME,LOG_TYPE,ERROR_MESSAGE,
+		OPERATKR_TYPE,INVOKE_METHOD,SERVER_NAME,BROWSER_INFO,REQUEST_CONTEXT,RESULT_CONTEXT,
+		(invoke_end_time-invoke_start_time)*1000 invoke_time
+									FROM
+										TBL_OPERATOER_LOG_SHARD
+									WHERE 1=1
+										/~id: AND ID = {id}~/
+										/~appName: AND APP_NAME = {appName}~/
+										/~operatorNo: AND OPERATOR_NUMBER like '%'||{operatorNo}||'%'~/
+										/~operatorType: AND OPERATKR_TYPE = {operatorType}~/
+										/~serverName: AND SERVER_NAME = {serverName}~/
+										/~ip: AND IP = {ip}~/
+										/~keyGuid: AND KEY_GUID = {keyGuid}~/
+										/~requestContext: AND REQUEST_CONTEXT like '%'||{requestContext}||'%'~/
+										/~resultContext: AND RESULT_CONTEXT like  '%'||{resultContext}||'%'~/
+										/~keyGuid: AND KEY_GUID = {keyGuid}~/
+										/~functionUrl: AND FUNCTION_URL like '%'||{functionUrl}||'%'~/
+										/~invokeMethod: AND INVOKE_METHOD  like '%'||{invokeMethod}||'%'~/
+										/~startDate: AND INVOKE_START_TIME >= {startDate}~/
+										/~endDate: AND INVOKE_START_TIME <= {endDate}~/
+										/~logType: AND LOG_TYPE = {logType}~/
+										WITH UR
+				]]>
+			</value>
+		</property>
+		<property name="queryWithoutParam" value="false" />
+	</bean>
+
+
+	<bean id="rateLimiterRuleQuery" class="com.yeepay.g3.utils.query.Query">
+		<property name="sql">
+			<value>
+				<![CDATA[
+				SELECT R.ID,R.APP_ID,R.CUSTOMER_NO,R.URL_VALUE,R.IP_VALUE,R.POLICY,
+				R.LIMIT_VALUE,R.LIMIT_SECOND,R.WAIT_TIME,R.TARGET,R.WARNING_NUM
+				,R.LAST_UPDATE_TIME,R.CREATE_TIME,APP.APP_NAME,R.TEMP_FREEZE_TIME
+			    FROM PERMISSION.
+				TBL_LIMIT_RULE R 
+				LEFT JOIN PERMISSION.TBL_APPLICATION APP ON R.APP_ID=APP.ID
+									WHERE 1=1
+										/~appName: AND APP.APP_NAME = {appName}~/
+										/~customerNo: AND R.CUSTOMER_NO like '%'||{customerNo}||'%'~/
+										/~ip: AND R.IP_VALUE = {ip}~/
+										/~url: AND R.URL_VALUE = {url}~/
+										/~startDate: AND R.CREATE_TIME >= {startDate}~/
+										/~endDate: AND R.CREATE_TIME <= {endDate}~/
+										/~serverIp: AND R.TARGET like '%'||{serverIp}||'%'~/
+										WITH UR
+				]]>
+			</value>
+		</property>
+		<property name="queryWithoutParam" value="false" />
+	</bean>
+
+
+</beans>
